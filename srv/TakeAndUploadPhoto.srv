@@ -1,0 +1,9 @@
+string photo_file_location
+
+string location_name
+string location_address
+string action_name
+string action_start_datetime
+string action_success
+---
+bool photo_request_submitted
