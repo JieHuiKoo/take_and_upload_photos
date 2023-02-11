@@ -51,10 +51,11 @@ def get_action_index(cursor, db_values, connection):
 
     return row[0]
 
-def insert_photo(cursor, db_values, connection):
+def insert_photo(cursor, db_values, connection, location_idx, action_idx):
 
-    sql = "INSERT INTO actions (action_name, action_start_datetime, action_success) VALUES (%s, %s, %s)"
-    val = (db_values["actions"]["action_name"], db_values["actions"]["action_start_datetime"], db_values["actions"]["action_success"])
+    sql = "INSERT INTO photos_taken (photo_file_location, photo_datetime, location_id, action_id) VALUES (%s, %s, %s, %s)"
+    val = (db_values["photos_taken"]["photo_file_location"], db_values["photos_taken"]["photo_datetime"], location_idx, action_idx)
+    print(val)
     cursor.execute(sql, val)
     connection.commit()
 
@@ -116,21 +117,20 @@ def showImage(img):
     cv2.imshow('image', img)
     cv2.waitKey(1)
 
+def generate_file_name(now):
+    return int(now.strftime('%Y%m%d%H%M%S%f'))
+
 file_num = 0
-def save_image(image, file_directory, save_flag):
-    global file_num
+def save_image(image, now, save_flag):
     
-    file_num += 1
-
-    if not (os.path.exists(file_directory)):
-        os.makedirs(file_directory)
-
-    file_name = file_directory + "/" + str(file_num) + ".jpg"
+    server_resource_folder_location = "/home/jiehui/webdir/doggobot_picture_vault/resources"
+    file_location = "/taken_photos/" + str(generate_file_name(now)) + ".jpg"
+    full_file_location = server_resource_folder_location + file_location
     
     if save_flag: 
-        print("Saving Image: " + file_name)
-        cv2.imwrite(file_name, image)
-    return file_name
+        print("Saving Image: " + full_file_location)
+        cv2.imwrite(full_file_location, image)
+    return file_location
 
 def process_image(msg):
     
@@ -141,27 +141,31 @@ def process_image(msg):
 
 def handle_null_service_call(req):
     if req.action_start_datetime == '':
-        req.action_start_datetime = get_current_datetime()
+        req.action_start_datetime, _ = get_current_datetime()
     if req.action_name == '':
         req.action_name = "User Initiated Photo"
     if req.action_success == '':
         req.action_success = 1
+    if req.location_name == '':
+        req.location_name = "Not Available"
+    if req.location_address == '':
+        req.location_address = "Not Available"
     return req
     
 def get_current_datetime():
     now = datetime.now()
-    formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')
-    return formatted_date
+    formatted_time = now.strftime('%Y-%m-%d %H:%M:%S')
+    return formatted_time, now
 
 
 def handle_take_and_upload_photo(req):
-    file_location = save_image(drawImg, req.photo_file_location, 1)
-    current_datetime = get_current_datetime()
+    current_datetime, now = get_current_datetime()
+    file_location = save_image(drawImg, now, 1)
     req = handle_null_service_call(req)
     db_values = {
         "locations": {"location_name": req.location_name, "location_address": req.location_address},
         "actions": {"action_name":req.action_name, "action_start_datetime":req.action_start_datetime, "action_success":int(req.action_success)},
-        "pictures_taken": {"picture_file_location":file_location, "picture_datetime":current_datetime}
+        "photos_taken": {"photo_file_location":file_location, "photo_datetime":current_datetime}
         }
     print(db_values)
     

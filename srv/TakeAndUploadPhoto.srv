@@ -1,5 +1,3 @@
-string photo_file_location
-
 string location_name
 string location_address
 string action_name
