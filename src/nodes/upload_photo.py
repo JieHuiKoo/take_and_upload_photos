@@ -154,7 +154,7 @@ def handle_null_service_call(req):
     
 def get_current_datetime():
     now = datetime.now()
-    formatted_time = now.strftime('%Y-%m-%d %H:%M:%S')
+    formatted_time = now.strftime('%Y-%m-%d %H:%M')
     return formatted_time, now
 
 
