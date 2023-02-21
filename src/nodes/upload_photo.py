@@ -12,11 +12,6 @@ from mysql.connector import Error
 from take_and_upload_photos.srv import TakeAndUploadPhoto,TakeAndUploadPhotoResponse
 from datetime import datetime
 
-
-from geometry_msgs.msg import Point
-from visualization_msgs.msg import Marker
-
-
 print("Python Version: " + str(sys.version_info[0]) + '.' + str(sys.version_info[1]))
 print("OpenCV Version: " + str(cv2.__version__))
 
@@ -128,7 +123,7 @@ def save_image(image, now, save_flag):
     full_file_location = server_resource_folder_location + file_location
     
     if save_flag: 
-        print("Saving Image: " + full_file_location)
+        # print("Saving Image: " + full_file_location)
         cv2.imwrite(full_file_location, image)
     return file_location
 
@@ -159,15 +154,29 @@ def get_current_datetime():
 
 
 def handle_take_and_upload_photo(req):
+    rospy.loginfo("[TakeAndUploadPhoto]: Received(%s, %s, %s, %s, %s)", \
+        req.location_name,\
+        req.location_address,\
+        req.action_name,\
+        req.action_start_datetime,\
+        req.action_success)
+
+    try:
+        drawImg
+    except NameError:
+        rospy.loginfo("[TakeAndUploadPhoto]: Failed to upload, no photos received yet, make sure that the front camera node is running!")
+        return TakeAndUploadPhotoResponse(False)
+
     current_datetime, now = get_current_datetime()
     file_location = save_image(drawImg, now, 1)
+
     req = handle_null_service_call(req)
     db_values = {
         "locations": {"location_name": req.location_name, "location_address": req.location_address},
         "actions": {"action_name":req.action_name, "action_start_datetime":req.action_start_datetime, "action_success":int(req.action_success)},
         "photos_taken": {"photo_file_location":file_location, "photo_datetime":current_datetime}
         }
-    print(db_values)
+    # print(db_values)
     
     insert_to_db(db_values)
 
@@ -176,8 +185,8 @@ def handle_take_and_upload_photo(req):
 def start_node():
     rospy.init_node('segmented_colour')
     rospy.loginfo('upload_photo service started')
-    rospy.Subscriber("/armCamera/color/image_rect_color/", Image, process_image)
-    s = rospy.Service('TakeAndUploadPhotos', TakeAndUploadPhoto, handle_take_and_upload_photo)    
+    rospy.Subscriber("/frontCamera/color/image_rect_color/", Image, process_image)
+    s = rospy.Service('TakeAndUploadPhoto', TakeAndUploadPhoto, handle_take_and_upload_photo)    
     rospy.spin()
 
 if __name__ == '__main__':
