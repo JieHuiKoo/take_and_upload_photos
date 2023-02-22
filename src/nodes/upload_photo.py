@@ -46,10 +46,10 @@ def get_action_index(cursor, db_values, connection):
 
     return row[0]
 
-def insert_photo(cursor, db_values, connection, location_idx, action_idx):
+def insert_photo(cursor, db_values, connection, location_id, action_id, run_id):
 
-    sql = "INSERT INTO photos_taken (photo_file_location, photo_datetime, location_id, action_id) VALUES (%s, %s, %s, %s)"
-    val = (db_values["photos_taken"]["photo_file_location"], db_values["photos_taken"]["photo_datetime"], location_idx, action_idx)
+    sql = "INSERT INTO photos_taken (photo_file_location, photo_datetime, location_id, action_id, run_id) VALUES (%s, %s, %s, %s, %s)"
+    val = (db_values["photos_taken"]["photo_file_location"], db_values["photos_taken"]["photo_datetime"], location_id, action_id, run_id)
     print(val)
     cursor.execute(sql, val)
     connection.commit()
@@ -60,6 +60,20 @@ def insert_photo(cursor, db_values, connection, location_idx, action_idx):
 
     return row[0]
 
+run_once_flag = 0
+run_id = 0
+
+def get_run_id(cursor):
+
+    if run_once_flag == 0:
+        run_once_flag += 1
+        sql = "SELECT run_id FROM photos_taken ORDER BY run_id DESC"
+        cursor.execute(sql)
+        row = cursor.fetchone()
+        run_id = row[0] + 1
+
+    return run_id
+
 def insert_to_db(db_values):
     try:
         connection = mysql.connector.connect(host='localhost',
@@ -69,9 +83,10 @@ def insert_to_db(db_values):
         if connection.is_connected():
             cursor = connection.cursor(buffered=True)
 
-            location_idx = get_location_index(cursor, db_values, connection)
-            action_idx = get_action_index(cursor, db_values, connection)
-            insert_photo(cursor, db_values, connection, location_idx, action_idx)
+            location_id = get_location_index(cursor, db_values, connection)
+            action_id = get_action_index(cursor, db_values, connection)
+            run_id = get_run_id(cursor)
+            insert_photo(cursor, db_values, connection, location_id, action_id, run_id)
 
     except Error as e:
         print("Error while connecting to MySQL", e)

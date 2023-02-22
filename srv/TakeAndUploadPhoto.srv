@@ -3,6 +3,6 @@ string location_address
 string action_name
 string action_start_datetime
 string action_success
-int    camera_num            #0 for front camera, 1 for arm camera
+int8    camera_num            #0 for front camera, 1 for arm camera
 ---
 bool photo_request_submitted
