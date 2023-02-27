@@ -64,7 +64,9 @@ run_once_flag = 0
 run_id = 0
 
 def get_run_id(cursor):
-
+    global run_once_flag
+    global run_id
+    
     if run_once_flag == 0:
         run_once_flag += 1
         sql = "SELECT run_id FROM photos_taken ORDER BY run_id DESC"
@@ -175,12 +177,14 @@ def get_current_datetime():
 
 
 def handle_take_and_upload_photo(req):
-    rospy.loginfo("[TakeAndUploadPhoto]: Received(%s, %s, %s, %s, %d)", \
+    print(type(req.camera_num))
+    print(type(req.action_success))
+    rospy.loginfo("[TakeAndUploadPhoto]: Received(%s, %s, %s, %s, %d, %d)", \
         req.location_name,\
         req.location_address,\
         req.action_name,\
         req.action_start_datetime,\
-        req.action_success,\
+        int(req.action_success),\
         req.camera_num)
 
     try:
@@ -208,8 +212,8 @@ def handle_take_and_upload_photo(req):
 
 def start_node():
     rospy.init_node('segmented_colour')
-    rospy.loginfo('upload_photo service started')
-    rospy.Subscriber("/frontCamera/color/image_rect_color/", Image, process_front_image)
+    rospy.loginfo('[TakeAndUploadPhoto]: service started')
+    rospy.Subscriber("/frontCamera/color/image_raw/", Image, process_front_image)
     rospy.Subscriber("/armCamera/color/image_rect_color/", Image, process_arm_image)
     s = rospy.Service('TakeAndUploadPhoto', TakeAndUploadPhoto, handle_take_and_upload_photo)    
     rospy.spin()
