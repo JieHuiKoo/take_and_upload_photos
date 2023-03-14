@@ -177,9 +177,7 @@ def get_current_datetime():
 
 
 def handle_take_and_upload_photo(req):
-    print(type(req.camera_num))
-    print(type(req.action_success))
-    rospy.loginfo("[TakeAndUploadPhoto]: Received(%s, %s, %s, %s, %d, %d)", \
+    rospy.loginfo("\n[TakeAndUploadPhoto]: === Request received ===\n%s\n%s\n%s\n%s\n%d\n%d\n====", \
         req.location_name,\
         req.location_address,\
         req.action_name,\
